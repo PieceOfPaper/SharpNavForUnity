@@ -8,8 +8,8 @@ public class SharpNavExample : MonoBehaviour
     //Example을 여러 단계로 나누어서 쓰자.
     //1. SharpNav.NavMesh 생성
     //2. SharpNav.NavMesh로 경로탐색, Raycast 등등
-    //3. SharpNav.NavMesh 저장 및 불러오기
-    
+    //3. SharpNav.NavMesh 저장 및 불러오기 => 이 부분은 기존 코드 활용 못하니, 새로 만들어줘야한다.
+
     private SharpNav.NavMesh navMesh;
 
     // Start is called before the first frame update
