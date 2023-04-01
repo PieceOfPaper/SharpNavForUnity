@@ -1,0 +1,3 @@
+[submodule "Assets/SharpNav/Origin"]
+	path = Assets/SharpNav/Origin
+	url = https://github.com/PieceOfPaper/SharpNavForUnitySource
