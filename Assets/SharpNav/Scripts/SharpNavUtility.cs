@@ -79,11 +79,18 @@ namespace SharpNav
         public static IEnumerable<SharpNav.Geometry.Triangle3> ToSharpNavTriangles(this UnityEngine.TerrainData terrainDaata) => ToSharpNavTriangles(null, terrainDaata);
         public static IEnumerable<SharpNav.Geometry.Triangle3> ToSharpNavTriangles(UnityEngine.Transform transform, UnityEngine.TerrainData terrainData)
         {
+            var mesh = TerrainDataToMesh(terrainData);
+            return ToSharpNavTriangles(transform, mesh.vertices, mesh.GetIndices(0));
+        }
+
+        public static UnityEngine.Mesh TerrainDataToMesh(this UnityEngine.TerrainData terrainData)
+        {
             int resolution = terrainData.heightmapResolution;
             var meshScale = terrainData.size / (resolution - 1);
 
             var vertices = new UnityEngine.Vector3[resolution * resolution];
-            var indices = new int[(resolution - 1) * (resolution - 1) * 6];
+            var triangles = new int[(resolution - 1) * (resolution - 1) * 6];
+            var uv = new UnityEngine.Vector2[vertices.Length];
 
             float[,] heights = terrainData.GetHeights(0, 0, resolution, resolution);
 
@@ -92,24 +99,33 @@ namespace SharpNav
                 for (int x = 0; x < resolution; x++, i++)
                 {
                     vertices[i] = new UnityEngine.Vector3(x * meshScale.x, heights[z, x] * meshScale.y, z * meshScale.z);
-                    if ((i * 6 + 5) < indices.Length)
+                    uv[i] = new UnityEngine.Vector2((float)x / (resolution - 1), (float)z / (resolution - 1));
+
+                    if (x < resolution - 1 && z < resolution - 1)
                     {
                         int topLeft = z * resolution + x;
                         int bottomLeft = (z + 1) * resolution + x;
                         int bottomRight = (z + 1) * resolution + x + 1;
                         int topRight = z * resolution + x + 1;
 
-                        indices[i * 6] = topLeft;
-                        indices[i * 6 + 1] = bottomRight;
-                        indices[i * 6 + 2] = bottomLeft;
-                        indices[i * 6 + 3] = topLeft;
-                        indices[i * 6 + 4] = topRight;
-                        indices[i * 6 + 5] = bottomRight;
+                        triangles[i * 6] = topLeft;
+                        triangles[i * 6 + 1] = bottomRight;
+                        triangles[i * 6 + 2] = bottomLeft;
+                        triangles[i * 6 + 3] = topLeft;
+                        triangles[i * 6 + 4] = topRight;
+                        triangles[i * 6 + 5] = bottomRight;
                     }
                 }
             }
 
-            return ToSharpNavTriangles(transform, vertices, indices);
+            var mesh = new UnityEngine.Mesh
+            {
+                vertices = vertices,
+                triangles = triangles,
+                uv = uv
+            };
+            mesh.RecalculateNormals();
+            return mesh;
         }
 
 
@@ -135,4 +151,36 @@ namespace SharpNav
             return triangles;
         }
     }
+
+#if UNITY_EDITOR
+    public static class UnityEditorUtility
+    {
+        public static void DrawNavMeshHandles(SharpNav.TiledNavMesh navMesh)
+        {
+            if (navMesh == null) return;
+
+            UnityEditor.Handles.color = UnityEngine.Color.red;
+            var tile = navMesh.GetTileAt(0, 0, 0);
+            for (int polyIndex = 0; polyIndex < tile.Polys.Length; polyIndex++)
+            {
+                for (int vertIndex = 2; vertIndex < SharpNav.Pathfinding.PathfindingCommon.VERTS_PER_POLYGON; vertIndex++)
+                {
+                    if (tile.Polys[polyIndex].Verts[vertIndex] == 0)
+                        break;
+
+                    int vertIndex0 = tile.Polys[polyIndex].Verts[0];
+                    int vertIndex1 = tile.Polys[polyIndex].Verts[vertIndex - 1];
+                    int vertIndex2 = tile.Polys[polyIndex].Verts[vertIndex];
+
+                    var v1 = tile.Verts[vertIndex0].ToUnityVector3();
+                    var v2 = tile.Verts[vertIndex1].ToUnityVector3();
+                    var v3 = tile.Verts[vertIndex2].ToUnityVector3();
+
+                    UnityEditor.Handles.DrawPolyLine(v1, v2, v3);
+                }
+            }
+
+        }
+    }
+#endif
 }
