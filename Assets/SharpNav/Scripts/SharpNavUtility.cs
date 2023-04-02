@@ -3,6 +3,65 @@ using System.Collections.Generic;
 
 namespace SharpNav
 {
+    public static class QueryUtility
+    {
+        public static bool InRange(SharpNav.Geometry.Vector3 v1, SharpNav.Geometry.Vector3 v2, float r, float h)
+        {
+            float dx = v2.X - v1.X;
+            float dy = v2.Y - v1.Y;
+            float dz = v2.Z - v1.Z;
+            return (dx * dx + dz * dz) < (r * r) && System.Math.Abs(dy) < h;
+        }
+        
+        /// <summary>
+        /// Scaled vector addition
+        /// </summary>
+        /// <param name="dest">Result</param>
+        /// <param name="v1">Vector 1</param>
+        /// <param name="v2">Vector 2</param>
+        /// <param name="s">Scalar</param>
+        public static void VMad(ref SharpNav.Geometry.Vector3 dest, SharpNav.Geometry.Vector3 v1, SharpNav.Geometry.Vector3 v2, float s)
+        {
+            dest.X = v1.X + v2.X * s;
+            dest.Y = v1.Y + v2.Y * s;
+            dest.Z = v1.Z + v2.Z * s;
+        }
+
+        public static bool GetSteerTarget(NavMeshQuery navMeshQuery, SharpNav.Geometry.Vector3 startPos, SharpNav.Geometry.Vector3 endPos, float minTargetDist, SharpNav.Pathfinding.Path path,
+                ref SharpNav.Geometry.Vector3 steerPos, ref SharpNav.Pathfinding.StraightPathFlags steerPosFlag, ref SharpNav.Pathfinding.NavPolyId steerPosRef)
+        {
+            var steerPath = new SharpNav.Pathfinding.StraightPath();
+            navMeshQuery.FindStraightPath(startPos, endPos, path, steerPath, 0);
+            int nsteerPath = steerPath.Count;
+            if (nsteerPath == 0)
+                return false;
+
+            //find vertex far enough to steer to
+            int ns = 0;
+            while (ns < nsteerPath)
+            {
+                if ((steerPath[ns].Flags & SharpNav.Pathfinding.StraightPathFlags.OffMeshConnection) != 0 ||
+                    !InRange(steerPath[ns].Point.Position, startPos, minTargetDist, 1000.0f))
+                    break;
+
+                ns++;
+            }
+
+            //failed to find good point to steer to
+            if (ns >= nsteerPath)
+                return false;
+
+            steerPos = steerPath[ns].Point.Position;
+            steerPos.Y = startPos.Y;
+            steerPosFlag = steerPath[ns].Flags;
+            if (steerPosFlag == SharpNav.Pathfinding.StraightPathFlags.None && ns == (nsteerPath - 1))
+                steerPosFlag = SharpNav.Pathfinding.StraightPathFlags.End; // otherwise seeks path infinitely!!!
+            steerPosRef = steerPath[ns].Point.Polygon;
+
+            return true;
+        }
+    }
+
     public static class UnityUtility
     {
         public static UnityEngine.Vector2 ToUnityVector2(this SharpNav.Geometry.Vector2 vector2) => new UnityEngine.Vector2(vector2.X, vector2.Y);
