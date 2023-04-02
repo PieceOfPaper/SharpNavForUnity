@@ -22,7 +22,7 @@ public class SharpNavExample : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        navMesh = new SharpNav.IO.Json.NavMeshJsonSerializer().Deserialize(System.IO.Path.Combine(Application.dataPath, "SharpNav/Example/NavMesh.json"));
+        // navMesh = new SharpNav.IO.Json.NavMeshJsonSerializer().Deserialize(System.IO.Path.Combine(Application.dataPath, "SharpNav/Example/NavMesh.json"));
 
         var query = new SharpNav.NavMeshQuery(navMesh, 2048);
 
