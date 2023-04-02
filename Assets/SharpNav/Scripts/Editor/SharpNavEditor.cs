@@ -14,6 +14,7 @@ public class SharpNavEditor : EditorWindow
 
 
     public Vector2 scroll = Vector2.zero;
+    public SharpNav.IO.Json.NavMeshJsonSerializer serializer = null;
     public NavMeshGenerationSettings settings = null;
     public TiledNavMesh bakedNavmesh = null;
     public string bakeResultStr = string.Empty;
@@ -46,6 +47,9 @@ public class SharpNavEditor : EditorWindow
         if (settings == null)
             settings = NavMeshGenerationSettings.Default;
 
+        if (serializer == null)
+            serializer = new SharpNav.IO.Json.NavMeshJsonSerializer();
+
         scroll = EditorGUILayout.BeginScrollView(scroll);
         OnGUI_Settings();
         EditorGUILayout.Space();
@@ -59,7 +63,8 @@ public class SharpNavEditor : EditorWindow
             if (GUILayout.Button("Bake", GUILayout.ExpandWidth(false))) Bake();
             using (new EditorGUI.DisabledGroupScope(bakedNavmesh == null))
             {
-                if (GUILayout.Button("Save", GUILayout.ExpandWidth(false))) Save();
+                if (GUILayout.Button("Save (JSON)", GUILayout.ExpandWidth(false))) Save_Json();
+                if (GUILayout.Button("Save (Binary)", GUILayout.ExpandWidth(false))) Save_Binary();
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false))) Clear();
             }
         }
@@ -216,7 +221,7 @@ public class SharpNavEditor : EditorWindow
         }
     }
 
-    private void Save()
+    private void Save_Json()
     {
         if (bakedNavmesh == null)
             return;
@@ -225,10 +230,35 @@ public class SharpNavEditor : EditorWindow
         var path = EditorUtility.SaveFilePanel("Save SharpNav NavMesh", lastSavePath, "NavMesh", "json");
         if (string.IsNullOrWhiteSpace(path)) return;
 
-        lastSavePath = path;
+        EditorPrefs.SetString("SharpNav_LastSavePath", path);
         try
         {
-            // new SharpNav.IO.Json.NavMeshJsonSerializer().Serialize(path, bakedNavmesh);
+            var text = serializer.SerializeToText(bakedNavmesh);
+            System.IO.File.WriteAllText(path, text);
+            AssetDatabase.Refresh();
+        }
+        catch (System.Exception e)
+        {
+            EditorUtility.DisplayDialog("SharpNav Save Error", e.ToString(), "Ok");
+            Debug.LogError(e);
+        }
+    }
+
+    private void Save_Binary()
+    {
+        if (bakedNavmesh == null)
+            return;
+
+        var lastSavePath = EditorPrefs.GetString("SharpNav_LastSavePath", Application.dataPath);
+        var path = EditorUtility.SaveFilePanel("Save SharpNav NavMesh", lastSavePath, "NavMesh", "bytes");
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        EditorPrefs.SetString("SharpNav_LastSavePath", path);
+        try
+        {
+            var bytes = serializer.SerializeToBinary(bakedNavmesh);
+            System.IO.File.WriteAllBytes(path, bytes);
+            AssetDatabase.Refresh();
         }
         catch (System.Exception e)
         {

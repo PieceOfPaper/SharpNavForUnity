@@ -5,6 +5,7 @@ using SharpNav;
 
 public class SharpNavExample : MonoBehaviour
 {
+    public TextAsset navAsset;
     public Transform startPoint;
     public Transform dstPoint;
     public Vector3 extends = Vector3.one;
@@ -22,7 +23,7 @@ public class SharpNavExample : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        // navMesh = new SharpNav.IO.Json.NavMeshJsonSerializer().Deserialize(System.IO.Path.Combine(Application.dataPath, "SharpNav/Example/NavMesh.json"));
+        navMesh = navAsset == null ? null : new SharpNav.IO.Json.NavMeshJsonSerializer().DeserializeFromBinary(navAsset.bytes);
 
         var query = new SharpNav.NavMeshQuery(navMesh, 2048);
 
