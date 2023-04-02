@@ -13,13 +13,13 @@ public class SharpNavMesh
     public TiledNavMesh NavMeshData => m_NavMeshData;
 
     private NavMeshQuery m_Query;
-    private List<Vector3> m_PathList;
+    private PathBuilder m_PathBuilder;
 
     public SharpNavMesh(TiledNavMesh navMesh)
     {
         m_NavMeshData = navMesh;
         m_Query = new NavMeshQuery(navMesh, 2048);
-        m_PathList = new List<Vector3>(2048);
+        m_PathBuilder = new PathBuilder();
     }
 
     public Vector3 GetNearlestPosition(Vector3 pos, Vector3 extends)
@@ -46,12 +46,12 @@ public class SharpNavMesh
         m_Query.ClosestPointOnPoly(path[0], startNavPos, ref iterPos);
         m_Query.ClosestPointOnPoly(path[npolys - 1], dstNavPos, ref targetPos);
 
-        m_PathList.Clear();
-        m_PathList.Add(iterPos.ToUnityVector3());
+        m_PathBuilder.Clear();
+        m_PathBuilder.AppendPosition(iterPos.ToUnityVector3());
 
         float STEP_SIZE = 0.5f;
         float SLOP = 0.01f;
-        while (npolys > 0 && m_PathList.Count < m_PathList.Capacity)
+        while (npolys > 0)
         {
             //find location to steer towards
             var steerPos = new SharpNav.Geometry.Vector3();
@@ -95,20 +95,14 @@ public class SharpNavMesh
             {
                 //reached end of path
                 iterPos = targetPos;
-                if (m_PathList.Count < m_PathList.Capacity)
-                {
-                    m_PathList.Add(iterPos.ToUnityVector3());
-                }
+                m_PathBuilder.AppendPosition(iterPos.ToUnityVector3());
                 break;
             }
 
             //store results
-            if (m_PathList.Count < m_PathList.Capacity)
-            {
-                m_PathList.Add(iterPos.ToUnityVector3());
-            }
+            m_PathBuilder.AppendPosition(iterPos.ToUnityVector3());
         }
-        return m_PathList.ToArray();
+        return m_PathBuilder.ToArray();
     }
 
 
