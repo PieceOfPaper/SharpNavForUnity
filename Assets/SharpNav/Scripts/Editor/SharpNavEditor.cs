@@ -228,7 +228,7 @@ public class SharpNavEditor : EditorWindow
         lastSavePath = path;
         try
         {
-            new SharpNav.IO.Json.NavMeshJsonSerializer().Serialize(path, bakedNavmesh);
+            // new SharpNav.IO.Json.NavMeshJsonSerializer().Serialize(path, bakedNavmesh);
         }
         catch (System.Exception e)
         {
