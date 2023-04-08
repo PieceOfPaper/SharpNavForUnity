@@ -200,6 +200,13 @@ public class SharpNavEditor : EditorWindow
             combineInst.transform = terrain.transform.localToWorldMatrix;
             combineInstList.Add(combineInst);
         }
+        if (opt_useMesh != null)
+        {
+            var combineInst = new CombineInstance();
+            combineInst.mesh = opt_useMesh;
+            combineInst.transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
+            combineInstList.Add(combineInst);
+        }
         var resultMesh = new Mesh();
         resultMesh.CombineMeshes(combineInstList.ToArray(), true, true, false);
         var triangles = resultMesh.ToSharpNavTriangles();

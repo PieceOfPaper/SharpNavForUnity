@@ -51,7 +51,8 @@ public class SharpNavMesh
 
         float STEP_SIZE = 0.5f;
         float SLOP = 0.01f;
-        while (npolys > 0)
+        int loopCount = 0;
+        while (npolys > 0 && loopCount < 10000)
         {
             //find location to steer towards
             var steerPos = new SharpNav.Geometry.Vector3();
@@ -101,6 +102,8 @@ public class SharpNavMesh
 
             //store results
             m_PathBuilder.AppendPosition(iterPos.ToUnityVector3());
+
+            loopCount++;
         }
         return m_PathBuilder.ToArray();
     }
