@@ -5,16 +5,12 @@ using SharpNav;
 
 public class SharpNavExample : MonoBehaviour
 {
+    public int groupID = 1;
     public TextAsset navAsset;
     public Transform startPoint;
     public Transform dstPoint;
     public Vector3 extends = Vector3.one;
-
-    //TODO
-    //Example을 여러 단계로 나누어서 쓰자.
-    //1. SharpNav.NavMesh 생성
-    //2. SharpNav.NavMesh로 경로탐색, Raycast 등등
-    //3. SharpNav.NavMesh 저장 및 불러오기 => 이 부분은 기존 코드 활용 못하니, 새로 만들어줘야한다.
+    public SharpNavAgent agent;
 
     private SharpNavMesh navMesh;
     private Vector3[] path;
@@ -22,7 +18,9 @@ public class SharpNavExample : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        navMesh = SharpNavMesh.Load(navAsset);
+        navMesh = SharpNavManager.Instance.LoadNavMesh(groupID, navAsset);
+        agent.MoveTo(dstPoint.position);
+
         path = navMesh.FindPath(startPoint.position, dstPoint.position, extends);
     }
 
@@ -57,7 +55,7 @@ public class SharpNavExample : MonoBehaviour
             }
         }
 
-        Gizmos.color = Color.green;
+        Gizmos.color = Color.blue;
         if (path != null && path.Length > 0)
         {
             Gizmos.DrawSphere(path[0], 0.1f);

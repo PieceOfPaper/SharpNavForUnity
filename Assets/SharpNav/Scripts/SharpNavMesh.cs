@@ -3,23 +3,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using SharpNav;
 using SharpNav.Pathfinding;
+using SharpNav.Crowds;
 
 /// <summary>
 /// Unity용 NavMesh Container
 /// </summary>
 public class SharpNavMesh
 {
+    private int m_GroupID;
+    public int GroupID => m_GroupID;
+
     private TiledNavMesh m_NavMeshData;
     public TiledNavMesh NavMeshData => m_NavMeshData;
 
     private NavMeshQuery m_Query;
+    public NavMeshQuery Query => m_Query;
+
+    private Crowd m_Crowd;
+    public Crowd Crowd => m_Crowd;
+
     private PathBuilder m_PathBuilder;
 
-    public SharpNavMesh(TiledNavMesh navMesh)
+    public SharpNavMesh(int groupID, TiledNavMesh navMesh)
     {
+        m_GroupID = groupID;
         m_NavMeshData = navMesh;
         m_Query = new NavMeshQuery(navMesh, 2048);
+        m_Crowd = new Crowd(100, 1.0f, ref navMesh);
         m_PathBuilder = new PathBuilder();
+    }
+
+    public void Update(float deltaTime)
+    {
+        if (m_Crowd != null)
+        {
+            m_Crowd.Update(deltaTime);
+        }
     }
 
     public Vector3 GetNearlestPosition(Vector3 pos, Vector3 extends)
@@ -106,24 +125,5 @@ public class SharpNavMesh
             loopCount++;
         }
         return m_PathBuilder.ToArray();
-    }
-
-
-
-    public static SharpNavMesh Load(TextAsset textAsset)
-    {
-        return Load(textAsset.bytes);
-    }
-
-    public static SharpNavMesh Load(string text)
-    {
-        var navMesh = new SharpNav.IO.Json.NavMeshJsonSerializer().DeserializeFromText(text);
-        return new SharpNavMesh(navMesh);
-    }
-
-    public static SharpNavMesh Load(byte[] bytes)
-    {
-        var navMesh = new SharpNav.IO.Json.NavMeshJsonSerializer().DeserializeFromBinary(bytes);
-        return new SharpNavMesh(navMesh);
     }
 }
